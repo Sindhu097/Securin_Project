@@ -1,1 +1,44 @@
 
+This section documents how each of the specified frontend requirements was implemented and verified to function correctly in the final user interface.
+
+1. Fetching Data via RESTful API and Rendering Table
+A RESTful API built using Flask is used to serve filtered data from the local SQLite database (cpe_data.db).
+The / route fetches and renders CPE data into a table on the frontend by calling the backend API using form parameters via HTTP GET.
+The returned data is displayed on the frontend using a paginated HTML table.
+
+1. Table Columns with Required Features
+a. Title:
+The CPE title column is displayed using Bootstrap’s text-truncate class and a title tooltip attribute.
+Long titles are truncated visually, and full text is shown on hover.
+
+b. URL 22 (cpe_22_uri):
+Rendered in its own column. If value is missing, it is displayed as None.
+
+c. URL 23 (cpe_23_uri):
+Rendered in a separate column and also truncated with hover support.
+
+d. Deprecated Date 22:
+Dates are formatted using the strftime method to display as MMM DD, YYYY (e.g., Jul 25, 2025).
+
+e. Deprecated Date 23:
+Same formatting as Date 22. If no date exists, None is shown.
+
+f. References:
+Up to two reference links are shown directly in the table.
+Each link is truncated and shows the full link on hover using a title attribute.
+If more than two references exist, an X more link is displayed.
+Clicking X more opens a Bootstrap popover containing the remaining links, each truncated and targeted to open in a new tab.
+
+2. Field (Cell) Level Filtering Using Search API
+Filters are available at the top of the page: CPE Title, CPE 2.2 URI, and CPE 2.3 URI.
+Each field can be used independently or in combination.
+When filters are applied, the form submits to the server which uses these filters to query the database using SQL LIKE conditions.
+Filtered results are returned and rendered live in the table.
+
+3. Pagination with Custom Results Per Page
+Pagination links are generated at the bottom of the page with active state highlighting.
+Server-side pagination ensures only relevant results are fetched from the database for each page.
+
+4. Fallback Screens
+for certain fields such as CPE 2.2 URI, Deprecation Date 2.2, and Deprecation Date 2.3, the value None is displayed when the corresponding data is not available in the dataset.
+This behavior is expected, as the given dataset does not contain complete values for all six columns across every entry. The interface gracefully handles such partial records and clearly indicates missing information.
