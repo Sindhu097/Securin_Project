@@ -1,1 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Search CPE Data</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <style>
+        .truncate {
+            max-width: 200px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+    </style>
+</head>
+<body class="p-4">
+    <div class="container">
+        <h2 class="mb-4">Search CPE Data</h2>
+        <form method="get" class="row g-3 mb-3">
+            <div class="col-md-3">
+                <input type="text" class="form-control" name="cpe_title" placeholder="CPE Title" value="{{ filters.cpe_title }}">
+            </div>
+            <div class="col-md-3">
+                <input type="text" class="form-control" name="cpe_22_uri" placeholder="CPE 2.2 URI" value="{{ filters.cpe_22_uri }}">
+            </div>
+            <div class="col-md-3">
+                <input type="text" class="form-control" name="cpe_23_uri" placeholder="CPE 2.3 URI" value="{{ filters.cpe_23_uri }}">
+            </div>
+            <div class="col-md-2">
+                <select class="form-select" name="per_page">
+                    {% for option in [15, 20, 30, 40, 50] %}
+                        <option value="{{ option }}" {% if option == per_page %}selected{% endif %}>{{ option }} per page</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-1">
+                <button type="submit" class="btn btn-primary w-100">Search</button>
+            </div>
+        </form>
 
+        {% if results %}
+        <table class="table table-bordered table-hover">
+            <thead>
+                <tr>
+                    <th>Title</th>
+                    <th>CPE 2.2 URI</th>
+                    <th>CPE 2.3 URI</th>
+                    <th>Deprecation Date 2.2</th>
+                    <th>Deprecation Date 2.3</th>
+                    <th>References</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in results %}
+                <tr>
+                    <td class="truncate" title="{{ item.cpe_title }}">{{ item.cpe_title }}</td>
+                    <td class="truncate" title="{{ item.cpe_22_uri }}">{{ item.cpe_22_uri or "None" }}</td>
+                    <td class="truncate" title="{{ item.cpe_23_uri }}">{{ item.cpe_23_uri or "None" }}</td>
+                    <td>{{ item.cpe_22_deprecation_date or "None" }}</td>
+                    <td>{{ item.cpe_23_deprecation_date or "None" }}</td>
+                    <td>
+                        {% if item.reference_links %}
+                            {% for link in item.reference_links[:2] %}
+                                <a href="{{ link }}" title="{{ link }}" target="_blank">{{ link[:30] }}{% if link|length > 30 %}...{% endif %}</a><br>
+                            {% endfor %}
+                            {% if item.reference_links|length > 2 %}
+                                <a tabindex="0" class="text-primary" role="button" data-bs-toggle="popover" data-bs-trigger="focus" title="More References" data-bs-content="{% for link in item.reference_links[2:] %}<a href='{{ link }}' target='_blank'>{{ link[:40] }}{% if link|length > 40 %}...{% endif %}</a><br>{% endfor %}"> {{ item.reference_links|length - 2 }} more
+                                </a>
+                            {% endif %}
+                        {% else %}
+                            None
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <!-- Pagination -->
+        <nav aria-label="Page navigation">
+            <ul class="pagination justify-content-center">
+              {% if page > 1 %}
+                <li class="page-item">
+                  <a class="page-link" href="?cpe_title={{ filters.cpe_title }}&cpe_22_uri={{ filters.cpe_22_uri }}&cpe_23_uri={{ filters.cpe_23_uri }}&per_page={{ per_page }}&page=1">&laquo;</a>
+                </li>
+                <li class="page-item">
+                  <a class="page-link" href="?cpe_title={{ filters.cpe_title }}&cpe_22_uri={{ filters.cpe_22_uri }}&cpe_23_uri={{ filters.cpe_23_uri }}&per_page={{ per_page }}&page={{ page - 1 }}">&lsaquo;</a>
+                </li>
+              {% endif %}
+          
+              {% for i in range(page - 2, page + 3) %}
+                {% if i > 0 and i <= total_pages %}
+                  <li class="page-item {% if i == page %}active{% endif %}">
+                    <a class="page-link" href="?cpe_title={{ filters.cpe_title }}&cpe_22_uri={{ filters.cpe_22_uri }}&cpe_23_uri={{ filters.cpe_23_uri }}&per_page={{ per_page }}&page={{ i }}">{{ i }}</a>
+                  </li>
+                {% endif %}
+              {% endfor %}
+          
+              {% if page < total_pages %}
+                <li class="page-item">
+                  <a class="page-link" href="?cpe_title={{ filters.cpe_title }}&cpe_22_uri={{ filters.cpe_22_uri }}&cpe_23_uri={{ filters.cpe_23_uri }}&per_page={{ per_page }}&page={{ page + 1 }}">&rsaquo;</a>
+                </li>
+                <li class="page-item">
+                  <a class="page-link" href="?cpe_title={{ filters.cpe_title }}&cpe_22_uri={{ filters.cpe_22_uri }}&cpe_23_uri={{ filters.cpe_23_uri }}&per_page={{ per_page }}&page={{ total_pages }}">&raquo;</a>
+                </li>
+              {% endif %}
+            </ul>
+          </nav>
+          
+        {% else %}
+            <div class="alert alert-warning mt-4">No results found. Try modifying your filters.</div>
+        {% endif %}
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Enable popovers
+        document.addEventListener("DOMContentLoaded", function () {
+            const popovers = document.querySelectorAll('[data-bs-toggle="popover"]');
+            [...popovers].forEach(el => new bootstrap.Popover(el, {
+                html: true
+            }));
+        });
+    </script>
+</body>
+</html>
